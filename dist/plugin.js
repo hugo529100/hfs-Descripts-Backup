@@ -1,7 +1,8 @@
 exports.version = 1.0
 exports.apiRequired = 8.85
 exports.description = "Auto backup descript.ion files"
-exports.repo = "Hug3O/Descripts-Backup"
+exports.repo = "hugo529100/hfs-Descripts-Backup"
+
 
 exports.config = {
     maxBackups: {
