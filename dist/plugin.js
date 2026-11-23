@@ -1,13 +1,12 @@
-exports.version = 1.0
+exports.version = 1.1
 exports.apiRequired = 8.85
 exports.description = "Auto backup descript.ion files"
 exports.repo = "hugo529100/hfs-Descripts-Backup"
 
-
 exports.config = {
     maxBackups: {
         type: 'number',
-        defaultValue: 3,
+        defaultValue: 10,
         min: 1,
         max: 99,
         label: "Max Backups",
@@ -60,6 +59,16 @@ exports.init = async api => {
         }
     }
 
+    async function copyFileRetry(src, dst) {
+        try {
+            await fs.copyFile(src, dst)
+        } catch (e) {
+            if (e.code !== 'EBUSY' && e.code !== 'EPERM' && e.code !== 'EACCES') throw e
+            await new Promise(r => setTimeout(r, 3000))
+            await fs.copyFile(src, dst)
+        }
+    }
+
     async function backup(folder) {
         const descFile = path.join(folder, "descript.ion")
         
@@ -92,7 +101,7 @@ exports.init = async api => {
         const backupFile = path.join(backupDir, timeString() + "_descript.ion")
         
         try {
-            await fs.copyFile(descFile, backupFile)
+            await copyFileRetry(descFile, backupFile)
             
             state[descFile] = currentHash
             await saveState()
@@ -109,6 +118,7 @@ exports.init = async api => {
             }
             
         } catch (e) {
+            if (e && (e.code === 'EBUSY' || e.code === 'EPERM')) return
             api.log("Backup error:", e)
         }
     }
